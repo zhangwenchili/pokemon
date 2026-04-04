@@ -1,0 +1,14 @@
+<%# locals: instance %>
+<div class="col-sm-6 col-lg-4">
+  <%= link_to instance_path(instance), class: "card instance-card h-100 text-decoration-none text-body" do %>
+    <% if instance.species.image_url.present? %>
+      <%= image_tag instance.species.image_url, class: "card-img-top species-card-image", alt: instance.species.name %>
+    <% else %>
+      <div class="species-card-placeholder d-flex align-items-center justify-content-center text-muted">No image</div>
+    <% end %>
+    <div class="card-body">
+      <h2 class="h5 card-title"><%= instance.nickname.presence || instance.species.name %></h2>
+      <p class="card-text text-muted small mb-0"><%= instance.species.type_names_csv %></p>
+    </div>
+  <% end %>
+</div>

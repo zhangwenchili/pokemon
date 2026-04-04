@@ -1,0 +1,42 @@
+<% content_for :title, @instance.nickname.presence || @instance.species.name %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="row g-0">
+        <div class="col-md-5">
+          <% if @instance.species.image_url.present? %>
+            <%= image_tag @instance.species.image_url, class: "img-fluid rounded-start species-detail-image w-100", alt: @instance.species.name %>
+          <% else %>
+            <div class="species-detail-placeholder d-flex align-items-center justify-content-center text-muted h-100 min-height-detail">No image</div>
+          <% end %>
+        </div>
+        <div class="col-md-7">
+          <div class="card-body">
+            <h1 class="h3 card-title"><%= @instance.nickname.presence || @instance.species.name %></h1>
+            <p class="mb-1"><strong>Species:</strong> <%= @instance.species.name %></p>
+            <p class="mb-1"><strong>Type:</strong> <%= @instance.species.type_names_csv %></p>
+            <p class="mb-4">
+              <strong>Current HP:</strong>
+              <%= @instance.instance_status&.hit_point.present? ? @instance.instance_status.hit_point : "—" %>
+            </p>
+
+            <div class="d-flex flex-wrap gap-2">
+              <% if @instance.wild? %>
+                <%= button_to "Catch", catch_instance_path(@instance), method: :post, class: "btn btn-success" %>
+              <% elsif @instance.on_team_for?(current_user) %>
+                <%= button_to "Move to repo", move_to_repo_instance_path(@instance), method: :post, class: "btn btn-warning" %>
+              <% elsif @instance.in_repo_for?(current_user) %>
+                <% if @team_full %>
+                  <button type="button" class="btn btn-secondary" disabled>Move to team (team full)</button>
+                <% else %>
+                  <%= button_to "Move to team", move_to_team_instance_path(@instance), method: :post, class: "btn btn-primary" %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

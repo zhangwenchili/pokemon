@@ -1,0 +1,24 @@
+<header class="app-header border-bottom bg-white shadow-sm">
+  <div class="container py-2 d-flex flex-wrap align-items-center justify-content-between gap-2">
+    <ul class="nav nav-pills flex-grow-1">
+      <li class="nav-item">
+        <%= link_to "Wild Pokémon", wild_pokemons_path, class: nav_tab_class("wild_pokemons") %>
+      </li>
+      <li class="nav-item">
+        <%= link_to "Team", team_path, class: nav_tab_class("team") %>
+      </li>
+      <li class="nav-item">
+        <%= link_to "Repo", repo_path, class: nav_tab_class("repo") %>
+      </li>
+      <li class="nav-item">
+        <%= link_to "Pokédex", species_index_path, class: nav_tab_class("species") %>
+      </li>
+    </ul>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+      <%= link_to profile_path, class: "text-decoration-none d-inline-flex align-items-center", title: "Profile" do %>
+        <%= user_avatar_tag(current_user, size: 36, extra_class: "border border-2 border-light shadow-sm") %>
+      <% end %>
+      <%= button_to "Log out", logout_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
+    </div>
+  </div>
+</header>

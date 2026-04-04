@@ -1,10 +1,44 @@
 /*
- * This is a manifest file that'll be compiled into application.css.
- *
- * With Propshaft, assets are served efficiently without preprocessing steps. You can still include
- * application-wide styles in this file, but keep in mind that CSS precedence will follow the standard
- * cascading order, meaning styles declared later in the document or manifest will override earlier ones,
- * depending on specificity.
- *
- * Consider organizing styles into separate files for maintainability.
+ * App-specific layout tweaks (Bootstrap loaded from CDN in the layout).
  */
+
+.app-body {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.app-header .nav-pills .nav-link {
+  border-radius: 0.375rem;
+}
+
+.instance-card {
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.instance-card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+
+.species-card-image,
+.species-detail-image {
+  height: 220px;
+  object-fit: contain;
+  background-color: #fff;
+  padding: 0.5rem;
+}
+
+.species-card-placeholder,
+.species-detail-placeholder {
+  height: 220px;
+  background-color: #e9ecef;
+}
+
+.min-height-detail {
+  min-height: 280px;
+}
+
+/* Pagy Bootstrap nav: keep controls centered and spaced from the grid */
+.pagy-bootstrap-wrap .pagy-bootstrap.series-nav {
+  margin-bottom: 0;
+}
