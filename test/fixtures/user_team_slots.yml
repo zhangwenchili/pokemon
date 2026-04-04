@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  instance: one
+  slot_index: 1
+
+two:
+  user: two
+  instance: two
+  slot_index: 1
