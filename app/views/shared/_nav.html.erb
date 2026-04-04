@@ -14,6 +14,11 @@
         <%= link_to "Pokédex", species_index_path, class: nav_tab_class("species") %>
       </li>
     </ul>
-    <%= button_to "Log out", logout_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
+    <div class="d-flex align-items-center gap-2 flex-shrink-0">
+      <%= link_to profile_path, class: "text-decoration-none d-inline-flex align-items-center", title: "Profile" do %>
+        <%= user_avatar_tag(current_user, size: 36, extra_class: "border border-2 border-light shadow-sm") %>
+      <% end %>
+      <%= button_to "Log out", logout_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
+    </div>
   </div>
 </header>

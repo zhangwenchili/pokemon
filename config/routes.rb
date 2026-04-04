@@ -10,6 +10,8 @@ Rails.application.routes.draw do
   get "register", to: "users#new", as: :register
   resources :users, only: [:create]
 
+  resource :profile, only: [:show, :update]
+
   resources :wild_pokemons, only: [:index], path: "wild"
   get "team", to: "team#index", as: :team
   get "repo", to: "repo#index", as: :repo

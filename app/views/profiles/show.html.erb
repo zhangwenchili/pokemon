@@ -1,0 +1,31 @@
+<% content_for :title, "Profile — Pokémon" %>
+
+<h1 class="h3 mb-4">Profile</h1>
+
+<div class="card shadow-sm" style="max-width: 28rem;">
+  <div class="card-body text-center">
+    <div class="mb-3 d-flex justify-content-center">
+      <%= user_avatar_tag(@user, size: 120, extra_class: "border border-3 border-light shadow") %>
+    </div>
+    <p class="h5 mb-4"><%= @user.username %></p>
+
+    <%= form_with model: @user, url: profile_path, method: :patch, multipart: true do |f| %>
+      <% if @user.errors.any? %>
+        <div class="alert alert-danger text-start small" role="alert">
+          <ul class="mb-0 ps-3">
+            <% @user.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="mb-3 text-start">
+        <%= f.label :avatar, "Change avatar", class: "form-label" %>
+        <%= f.file_field :avatar, accept: "image/png,image/jpeg,image/gif,image/webp", class: "form-control form-control-sm" %>
+        <div class="form-text">PNG, JPEG, GIF, or WebP. Up to 5 MB.</div>
+      </div>
+      <%= f.submit "Upload", class: "btn btn-primary" %>
+    <% end %>
+  </div>
+</div>
