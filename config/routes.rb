@@ -22,6 +22,7 @@ Rails.application.routes.draw do
       post :catch
       post :move_to_repo
       post :move_to_team
+      post :release
     end
   end
 end
