@@ -1,0 +1,14 @@
+<%# locals: species %>
+<div class="col-sm-6 col-lg-4">
+  <%= link_to species_path(species), class: "card instance-card h-100 text-decoration-none text-body" do %>
+    <% if species.image_url.present? %>
+      <%= image_tag species.image_url, class: "card-img-top species-card-image", alt: species.name %>
+    <% else %>
+      <div class="species-card-placeholder d-flex align-items-center justify-content-center text-muted">No image</div>
+    <% end %>
+    <div class="card-body">
+      <h2 class="h5 card-title"><%= species.name %></h2>
+      <p class="card-text text-muted small mb-0"><%= species.type_names_csv %></p>
+    </div>
+  <% end %>
+</div>

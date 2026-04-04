@@ -1,0 +1,24 @@
+<% content_for :title, @species.name %>
+
+<nav aria-label="breadcrumb" class="mb-3">
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item"><%= link_to "Pokédex", species_index_path %></li>
+    <li class="breadcrumb-item active" aria-current="page"><%= @species.name %></li>
+  </ol>
+</nav>
+
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card shadow-sm">
+      <% if @species.image_url.present? %>
+        <%= image_tag @species.image_url, class: "card-img-top species-detail-image", alt: @species.name %>
+      <% else %>
+        <div class="species-detail-placeholder d-flex align-items-center justify-content-center text-muted">No image</div>
+      <% end %>
+      <div class="card-body">
+        <h1 class="h3 card-title"><%= @species.name %></h1>
+        <p class="card-text text-muted mb-0"><strong>Type:</strong> <%= @species.type_names_csv %></p>
+      </div>
+    </div>
+  </div>
+</div>

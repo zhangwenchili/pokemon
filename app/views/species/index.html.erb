@@ -1,0 +1,12 @@
+<% content_for :title, "Pokédex" %>
+
+<h1 class="h3 mb-2">Pokédex</h1>
+<p class="text-muted mb-4">Browse all species. Tap a card for details.</p>
+
+<div class="row g-4">
+  <% @species.each do |species| %>
+    <%= render "shared/species_card", species: species %>
+  <% end %>
+</div>
+
+<%= render "shared/pagy_bootstrap", pagy: @pagy %>

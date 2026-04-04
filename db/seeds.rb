@@ -7,6 +7,9 @@ require "net/http"
 require "json"
 
 puts "Clearing old data..."
+UserTeamSlot.destroy_all
+InstanceStatus.destroy_all
+Instance.destroy_all
 SpeciesTypeMap.destroy_all
 Type.destroy_all
 Species.destroy_all
@@ -51,4 +54,18 @@ Species.destroy_all
   end
 end
 
-puts "Done! Seeded species, types, and relationships."
+puts "Creating wild Pokémon instances..."
+Species.order(:pokedex_number).limit(40).find_each do |sp|
+  inst = Instance.create!(
+    user: nil,
+    species: sp,
+    nickname: sp.name,
+    level: rand(5..45)
+  )
+  InstanceStatus.create!(
+    instance: inst,
+    hit_point: rand(25..100)
+  )
+end
+
+puts "Done! Seeded species, types, relationships, and wild instances."

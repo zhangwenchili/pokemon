@@ -1,0 +1,6 @@
+<%# locals: (pagy:) — Bootstrap page links; hidden when there is only one page. %>
+<% if pagy.pages > 1 %>
+  <nav class="mt-4 d-flex justify-content-center pagy-bootstrap-wrap" aria-label="Pagination">
+    <%== pagy.series_nav(:bootstrap, aria_label: "Page navigation") %>
+  </nav>
+<% end %>

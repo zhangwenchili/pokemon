@@ -1,0 +1,15 @@
+<% content_for :title, "Wild Pokémon" %>
+
+<h1 class="h3 mb-2">Wild Pokémon</h1>
+<p class="text-muted mb-4">Tap a card to see details. You can catch Pokémon and send them to your repo.</p>
+
+<% if @instances.empty? %>
+  <p class="text-muted">No wild Pokémon right now. Run <code>bin/rails db:seed</code> to populate the world.</p>
+<% else %>
+  <div class="row g-4">
+    <% @instances.each do |instance| %>
+      <%= render "shared/instance_card", instance: instance %>
+    <% end %>
+  </div>
+  <%= render "shared/pagy_bootstrap", pagy: @pagy %>
+<% end %>
