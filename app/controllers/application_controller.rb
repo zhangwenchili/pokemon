@@ -7,24 +7,40 @@ class ApplicationController < ActionController::Base
   # Changes to the importmap will invalidate the etag for HTML responses
   stale_when_importmap_changes
 
-  helper_method :current_user, :logged_in?
+  before_action :authenticate_user!
+  before_action :configure_permitted_parameters, if: :devise_controller?
 
-  # Phase 1 uses cookie-backed sessions (session[:user_id]) for authentication.
-  before_action :require_login
+  helper_method :current_user, :logged_in?
 
   private
 
+  # JSON cookie serializer can deserialize Warden user as a Hash; always expose a User record.
   def current_user
-    @current_user ||= User.find_by(id: session[:user_id])
+    @current_user ||= begin
+      u = super
+      case u
+      when User then u
+      when Hash then User.find_by(id: u["id"] || u[:id])
+      else u
+      end
+    end
   end
 
   def logged_in?
-    current_user.present?
+    user_signed_in?
   end
 
-  def require_login
-    return if logged_in?
+  def configure_permitted_parameters
+    # authentication_keys is :username only; Devise would not permit :email on sign_up unless added.
+    devise_parameter_sanitizer.permit(:sign_up, keys: %i[email username])
+    devise_parameter_sanitizer.permit(:account_update, keys: %i[email username])
+  end
 
-    redirect_to login_path, alert: "Please sign in to continue."
+  def after_sign_in_path_for(_resource)
+    wild_pokemons_path
+  end
+
+  def after_sign_out_path_for(_resource_or_scope)
+    new_user_session_path
   end
 end

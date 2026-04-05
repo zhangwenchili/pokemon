@@ -1,6 +1,9 @@
-# End-user account: session auth via has_secure_password (bcrypt).
+# End-user account: Devise/Warden for web and API; web signs in with username (API may use email).
 class User < ApplicationRecord
-  has_secure_password
+  devise :database_authenticatable, :registerable,
+         :validatable,
+         authentication_keys: [:username],
+         password_length: 6..128
 
   has_one_attached :avatar
 
@@ -10,9 +13,17 @@ class User < ApplicationRecord
   validates :username, presence: true, uniqueness: { case_sensitive: false }
   validates :email, presence: true, uniqueness: { case_sensitive: false },
                     format: { with: URI::MailTo::EMAIL_REGEXP }
-  validates :password, length: { minimum: 6 }, allow_nil: true
-
   validate :acceptable_avatar
+
+  # Allow API login by email while web Devise form uses username.
+  def self.find_for_database_authentication(warden_conditions)
+    raw = warden_conditions.respond_to?(:to_unsafe_h) ? warden_conditions.to_unsafe_h : warden_conditions.to_h
+    conditions = raw.symbolize_keys
+    login = conditions[:username].presence || conditions[:email].presence
+    return super(warden_conditions) unless login
+
+    where("LOWER(username) = :l OR LOWER(email) = :l", l: login.to_s.downcase.strip).first
+  end
 
   private
 

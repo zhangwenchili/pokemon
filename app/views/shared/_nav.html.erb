@@ -18,7 +18,7 @@
       <%= link_to profile_path, class: "text-decoration-none d-inline-flex align-items-center", title: "Profile" do %>
         <%= user_avatar_tag(current_user, size: 36, extra_class: "border border-2 border-light shadow-sm") %>
       <% end %>
-      <%= button_to "Log out", logout_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
+      <%= button_to "Log out", destroy_user_session_path, method: :delete, class: "btn btn-outline-secondary btn-sm" %>
     </div>
   </div>
 </header>
