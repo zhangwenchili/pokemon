@@ -85,6 +85,21 @@ test:
 # for a full overview on how database connection configuration can be specified.
 #
 production:
+  <% if ENV["DATABASE_URL"].present? %>
+  # Heroku / single Postgres URL: primary, cache, queue, and cable share one database.
+  primary: &heroku
+    <<: *default
+    url: <%= ENV["DATABASE_URL"] %>
+  cache:
+    <<: *heroku
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *heroku
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *heroku
+    migrations_paths: db/cable_migrate
+  <% else %>
   primary: &primary_production
     <<: *default
     database: pokemon_production
@@ -102,3 +117,4 @@ production:
     <<: *primary_production
     database: pokemon_production_cable
     migrations_paths: db/cable_migrate
+  <% end %>
