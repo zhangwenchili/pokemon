@@ -1,7 +1,7 @@
 # Show and manage a single Pokémon instance (wild catch, team ↔ repo moves).
 class InstancesController < ApplicationController
   before_action :set_instance
-  before_action :authorize_view!, only: %i[ show ]
+  before_action :authorize_view!, only: %i[ show release ]
 
   def show
     @team_full = current_user.user_team_slots.count >= 6
@@ -41,6 +41,18 @@ class InstancesController < ApplicationController
     next_slot = (0..5).find { |i| current_user.user_team_slots.where(slot_index: i).none? }
     current_user.user_team_slots.create!(instance: @instance, slot_index: next_slot)
     redirect_to @instance, notice: "Added to your team."
+  end
+
+  def release
+    unless @instance.user_id == current_user.id &&
+           (@instance.on_team_for?(current_user) || @instance.in_repo_for?(current_user))
+      redirect_to @instance, alert: "You can only release Pokémon from your team or repo."
+      return
+    end
+
+    label = @instance.nickname.presence || @instance.species.name
+    @instance.destroy!
+    redirect_to repo_path, notice: "#{label} was released."
   end
 
   private

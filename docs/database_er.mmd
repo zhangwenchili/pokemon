@@ -1,0 +1,98 @@
+%% Entity-relationship diagram for this repo (db/schema.rb). Render at https://mermaid.live
+%% Polymorphic: active_storage_attachments targets User (and others) via record_type + record_id.
+
+erDiagram
+  users {
+    bigint id PK
+    string username
+    string email
+    string encrypted_password
+    datetime created_at
+    datetime updated_at
+  }
+
+  species {
+    bigint id PK
+    string name
+    integer pokedex_number
+    string image_url
+    datetime created_at
+    datetime updated_at
+  }
+
+  types {
+    bigint id PK
+    string name
+    datetime created_at
+    datetime updated_at
+  }
+
+  species_type_maps {
+    bigint id PK
+    bigint species_id FK
+    bigint type_id FK
+    datetime created_at
+    datetime updated_at
+  }
+
+  instances {
+    bigint id PK
+    bigint user_id FK "nullable = wild"
+    bigint species_id FK
+    string nickname
+    integer level
+    datetime created_at
+    datetime updated_at
+  }
+
+  instance_statuses {
+    bigint id PK
+    bigint instance_id FK
+    integer hit_point
+    datetime created_at
+    datetime updated_at
+  }
+
+  user_team_slots {
+    bigint id PK
+    bigint user_id FK
+    bigint instance_id FK
+    integer slot_index
+    datetime created_at
+    datetime updated_at
+  }
+
+  active_storage_blobs {
+    bigint id PK
+    string key UK
+    string filename
+    string content_type
+    bigint byte_size
+    string service_name
+    datetime created_at
+  }
+
+  active_storage_attachments {
+    bigint id PK
+    string name
+    string record_type
+    bigint record_id
+    bigint blob_id FK
+    datetime created_at
+  }
+
+  active_storage_variant_records {
+    bigint id PK
+    bigint blob_id FK
+    string variation_digest
+  }
+
+  users ||--o{ instances : "owns"
+  species ||--o{ instances : "species_of"
+  instances ||--|| instance_statuses : "status"
+  users ||--o{ user_team_slots : "team_slots"
+  instances ||--o| user_team_slots : "slot_for"
+  species ||--o{ species_type_maps : "typing"
+  types ||--o{ species_type_maps : "typing"
+  active_storage_blobs ||--o{ active_storage_attachments : "blob"
+  active_storage_blobs ||--o{ active_storage_variant_records : "variant"

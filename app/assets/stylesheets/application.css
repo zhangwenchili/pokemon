@@ -38,6 +38,10 @@
   min-height: 280px;
 }
 
+.profile-card {
+  max-width: 28rem;
+}
+
 /* Pagy Bootstrap nav: keep controls centered and spaced from the grid */
 .pagy-bootstrap-wrap .pagy-bootstrap.series-nav {
   margin-bottom: 0;

@@ -1,0 +1,681 @@
+openapi: 3.0.3
+info:
+  title: Pokémon Phase 2 API
+  description: |
+    JSON API exposing Phase 1 functionality for a separate frontend.
+
+    **Authentication (Phase 2)**: Devise is planned for sign-up, sign-in, and sign-out. This spec assumes a **session cookie**
+    (Set-Cookie on login). Cross-origin SPAs must use `credentials: include` and align CORS / SameSite with Rails.
+
+    **Behaviour**: Wild list, repo, and Pokédex species list match Phase 1 with **50** items per page; team holds up to **6**
+    instances and is not paginated.
+
+    **Email**: On successful catch of a new instance, the server sends a notification email to the user's registered address
+    (see Phase 2 PRD).
+
+    **Data model**: Maps to `users`, `species`, `types`, `species_type_maps`, `instances`, `instance_statuses`,
+    `user_team_slots`, and Active Storage avatars.
+  version: "1.0.0"
+
+servers:
+  - url: https://{host}/api/v1
+    variables:
+      host:
+        default: localhost:3000
+        description: Deployment host (including port)
+
+tags:
+  - name: Auth
+    description: Registration, login, logout (Devise session)
+  - name: Profile
+    description: Current user profile and avatar
+  - name: Wild Pokémon
+    description: Wild instances available to catch
+  - name: Team
+    description: Current user's team (up to 6 slots)
+  - name: Repo
+    description: Owned instances not on the team
+  - name: Species
+    description: Pokédex (species)
+  - name: Instances
+    description: Instance detail, catch, team/repo moves, release
+
+security:
+  - cookieAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register user
+      description: |
+        Creates a user and establishes a session (same as Phase 1 auto-login after registration).
+        With Devise this often maps to POST /users or a custom JSON controller; this spec uses /api/v1/auth/register.
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: Created; session cookie set
+          headers:
+            Set-Cookie:
+              description: Session cookie (exact name depends on Devise / Rails config)
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "422":
+          description: Validation failed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: |
+        Devise typically authenticates with **email** + **password**. If you keep Phase 1 **username** login,
+        extend the body with `username` or a single `login` field by agreement with the backend.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Signed in
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    delete:
+      tags: [Auth]
+      summary: Sign out
+      description: Destroys the server session and clears the cookie.
+      operationId: logout
+      responses:
+        "204":
+          description: Signed out
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Get current user profile
+      operationId: getProfile
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    patch:
+      tags: [Profile]
+      summary: Update profile (avatar)
+      description: Upload avatar via multipart/form-data; same rules as Phase 1 (PNG/JPEG/GIF/WebP, max 5 MB).
+      operationId: updateProfile
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                avatar:
+                  type: string
+                  format: binary
+                  description: Avatar image file
+              required: [avatar]
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          description: Validation failed (type, size, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /wild_pokemons:
+    get:
+      tags: [Wild Pokémon]
+      summary: List wild Pokémon
+      description: Instances with null user_id; paginated, 50 per page.
+      operationId: listWildPokemons
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /team:
+    get:
+      tags: [Team]
+      summary: My team
+      description: Up to 6 instances ordered by slot_index; not paginated.
+      operationId: listTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data]
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/InstanceSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /repo:
+    get:
+      tags: [Repo]
+      summary: Repo instances
+      description: Instances owned by the current user and not on the team; 50 per page.
+      operationId: listRepo
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /species:
+    get:
+      tags: [Species]
+      summary: List species (Pokédex)
+      description: Ordered by pokedex_number; 50 per page.
+      operationId: listSpecies
+      parameters:
+        - $ref: "#/components/parameters/Page"
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /species/{id}:
+    parameters:
+      - $ref: "#/components/parameters/SpeciesId"
+    get:
+      tags: [Species]
+      summary: Species detail
+      operationId: getSpecies
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SpeciesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /instances/{id}:
+    parameters:
+      - $ref: "#/components/parameters/InstanceId"
+    get:
+      tags: [Instances]
+      summary: Instance detail
+      description: |
+        Visible only if the instance is wild **or** owned by the current user.
+        `meta` drives UI actions (wild, on team, in repo, team full, etc.).
+      operationId: getInstance
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Forbidden for this instance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /instances/{id}/catch:
+    parameters:
+      - $ref: "#/components/parameters/InstanceId"
+    post:
+      tags: [Instances]
+      summary: Catch
+      description: |
+        Only wild instances can be caught; on success the instance belongs to the current user and lands in the repo (Phase 1).
+        **Phase 2**: Send a catch notification email asynchronously to the user's email.
+      operationId: catchInstance
+      responses:
+        "200":
+          description: Caught (email may be async); returns updated resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Not wild or action not allowed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /instances/{id}/move_to_repo:
+    parameters:
+      - $ref: "#/components/parameters/InstanceId"
+    post:
+      tags: [Instances]
+      summary: Move to repo
+      description: Only when the instance is on the current user's team.
+      operationId: moveInstanceToRepo
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Not on team or other business rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /instances/{id}/move_to_team:
+    parameters:
+      - $ref: "#/components/parameters/InstanceId"
+    post:
+      tags: [Instances]
+      summary: Move to team
+      description: Only when the instance is in the repo and the team has fewer than 6 members.
+      operationId: moveInstanceToTeam
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InstanceDetailResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Not in repo or team full
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /instances/{id}/release:
+    parameters:
+      - $ref: "#/components/parameters/InstanceId"
+    post:
+      tags: [Instances]
+      summary: Release (delete instance)
+      description: Only when owned by the current user and on team or repo; deletes the instance row and related status / slot.
+      operationId: releaseInstance
+      responses:
+        "204":
+          description: Released; no body
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Cannot release (wrong owner or state)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: _session_id
+      description: |
+        Actual Rails session cookie name varies (often _session_id or _myapp_session).
+        After Devise, still session-cookie based unless you add bearerAuth for tokens.
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      description: Page number (1-based; matches Pagy offset pagination)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    SpeciesId:
+      name: id
+      in: path
+      required: true
+      description: "Same as the {id} segment in the path; listed explicitly for type/docs (OpenAPI requires path parameters)."
+      schema:
+        type: integer
+        format: int64
+    InstanceId:
+      name: id
+      in: path
+      required: true
+      description: "Same as the {id} segment in the path; listed explicitly for type/docs (OpenAPI requires path parameters)."
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    Unauthorized:
+      description: Not signed in or invalid session
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    RegisterRequest:
+      type: object
+      required: [user]
+      properties:
+        user:
+          type: object
+          required: [username, email, password, password_confirmation]
+          properties:
+            username:
+              type: string
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              format: password
+            password_confirmation:
+              type: string
+              format: password
+
+    LoginRequest:
+      type: object
+      required: [user]
+      properties:
+        user:
+          type: object
+          required: [email, password]
+          properties:
+            email:
+              type: string
+              format: email
+            password:
+              type: string
+              format: password
+
+    User:
+      type: object
+      required: [id, username, email]
+      properties:
+        id:
+          type: integer
+          format: int64
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        avatar_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Public URL from Active Storage; null if no avatar
+
+    UserResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/User"
+
+    Type:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          description: Display label (raw DB value or humanized; agree with frontend)
+
+    Species:
+      type: object
+      required: [id, name, pokedex_number, types, type_names_csv]
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        pokedex_number:
+          type: integer
+          nullable: true
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          description: Artwork URL (species.image_url)
+        types:
+          type: array
+          items:
+            $ref: "#/components/schemas/Type"
+          description: Stable order matching species_type_maps
+        type_names_csv:
+          type: string
+          description: Comma-separated type labels for cards (Phase 1 copy)
+
+    SpeciesSummary:
+      allOf:
+        - $ref: "#/components/schemas/Species"
+
+    SpeciesResponse:
+      type: object
+      required: [data]
+      properties:
+        data:
+          $ref: "#/components/schemas/Species"
+
+    PaginationMeta:
+      type: object
+      required: [page, limit, count, pages]
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+          example: 50
+        count:
+          type: integer
+          description: Total record count
+        pages:
+          type: integer
+          description: Total pages
+
+    InstanceSummary:
+      type: object
+      required: [id, nickname, level, species, hit_point, wild]
+      properties:
+        id:
+          type: integer
+          format: int64
+        nickname:
+          type: string
+          nullable: true
+        level:
+          type: integer
+          nullable: true
+        hit_point:
+          type: integer
+          nullable: true
+          description: instance_statuses.hit_point
+        wild:
+          type: boolean
+          description: True when user_id is null
+        user_id:
+          type: integer
+          format: int64
+          nullable: true
+          description: Owner user id; null when wild. Omit in list payloads if the API prefers; include on detail/catch/move responses.
+        species:
+          $ref: "#/components/schemas/Species"
+
+    InstanceActionsMeta:
+      type: object
+      description: Matches Phase 1 detail page button rules
+      required: [wild, on_team, in_repo, team_full, can_catch, can_move_to_repo, can_move_to_team, can_release]
+      properties:
+        wild:
+          type: boolean
+        on_team:
+          type: boolean
+        in_repo:
+          type: boolean
+        team_full:
+          type: boolean
+          description: Current user already has 6 team slots filled
+        can_catch:
+          type: boolean
+        can_move_to_repo:
+          type: boolean
+        can_move_to_team:
+          type: boolean
+        can_release:
+          type: boolean
+
+    InstanceDetailResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          $ref: "#/components/schemas/InstanceSummary"
+        meta:
+          $ref: "#/components/schemas/InstanceActionsMeta"
+
+    InstanceListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/InstanceSummary"
+        meta:
+          type: object
+          required: [pagination]
+          properties:
+            pagination:
+              $ref: "#/components/schemas/PaginationMeta"
+
+    SpeciesListResponse:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SpeciesSummary"
+        meta:
+          type: object
+          required: [pagination]
+          properties:
+            pagination:
+              $ref: "#/components/schemas/PaginationMeta"
+
+    ErrorResponse:
+      type: object
+      properties:
+        errors:
+          oneOf:
+            - type: array
+              items:
+                type: string
+            - type: object
+              additionalProperties: true
+          description: Human-readable or field-level errors (Rails-style)
+        message:
+          type: string
+          description: Optional single message

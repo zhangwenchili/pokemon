@@ -33,6 +33,11 @@
                   <%= button_to "Move to team", move_to_team_instance_path(@instance), method: :post, class: "btn btn-primary" %>
                 <% end %>
               <% end %>
+
+              <% if @instance.on_team_for?(current_user) || @instance.in_repo_for?(current_user) %>
+                <%= button_to "Release", release_instance_path(@instance), method: :post, class: "btn btn-outline-danger",
+                    data: { turbo_confirm: "Release this Pokémon? This cannot be undone." } %>
+              <% end %>
             </div>
           </div>
         </div>
