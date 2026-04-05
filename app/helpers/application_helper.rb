@@ -1,16 +1,19 @@
 module ApplicationHelper
+  # Pixel sizes with matching rules in application.css (user-avatar--*).
+  AVATAR_SIZE_PRESETS = [ 32, 36, 40, 48, 64, 80, 120 ].freeze
+
   # Rounded avatar or username initial when no image is uploaded.
   def user_avatar_tag(user, size: 40, extra_class: nil)
-    style = "width: #{size}px; height: #{size}px; object-fit: cover;"
-    classes = [ "rounded-circle", extra_class ].compact.join(" ")
+    px = AVATAR_SIZE_PRESETS.min_by { |preset| (preset - size).abs }
+    size_class = "user-avatar user-avatar--#{px}"
+    classes = [ "rounded-circle", size_class, extra_class ].compact.join(" ")
 
     if user.avatar.attached?
-      image_tag user.avatar, class: classes, style:, alt: user.username
+      image_tag user.avatar, class: classes, alt: user.username
     else
       initial = user.username.to_s.first&.upcase || "?"
       content_tag(:div, initial,
-                  class: "#{classes} bg-secondary text-white d-inline-flex align-items-center justify-content-center user-avatar-placeholder",
-                  style: "#{style} font-size: #{size * 0.42}px; font-weight: 600;")
+                  class: "#{classes} bg-secondary text-white d-inline-flex align-items-center justify-content-center user-avatar-placeholder")
     end
   end
 

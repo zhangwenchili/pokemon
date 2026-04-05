@@ -46,3 +46,90 @@
 .pagy-bootstrap-wrap .pagy-bootstrap.series-nav {
   margin-bottom: 0;
 }
+
+/* User avatars: dimensions live in CSS (no inline styles). */
+.user-avatar {
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.user-avatar-placeholder {
+  font-weight: 600;
+}
+
+.user-avatar--32 {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+}
+
+.user-avatar-placeholder.user-avatar--32 {
+  font-size: 13.44px;
+}
+
+.user-avatar--36 {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
+}
+
+.user-avatar-placeholder.user-avatar--36 {
+  font-size: 15.12px;
+}
+
+.user-avatar--40 {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+.user-avatar-placeholder.user-avatar--40 {
+  font-size: 16.8px;
+}
+
+.user-avatar--48 {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.user-avatar-placeholder.user-avatar--48 {
+  font-size: 20.16px;
+}
+
+.user-avatar--64 {
+  width: 64px;
+  height: 64px;
+  min-width: 64px;
+  min-height: 64px;
+}
+
+.user-avatar-placeholder.user-avatar--64 {
+  font-size: 26.88px;
+}
+
+.user-avatar--80 {
+  width: 80px;
+  height: 80px;
+  min-width: 80px;
+  min-height: 80px;
+}
+
+.user-avatar-placeholder.user-avatar--80 {
+  font-size: 33.6px;
+}
+
+.user-avatar--120 {
+  width: 120px;
+  height: 120px;
+  min-width: 120px;
+  min-height: 120px;
+}
+
+.user-avatar-placeholder.user-avatar--120 {
+  font-size: 50.4px;
+}
